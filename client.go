@@ -415,7 +415,6 @@ func (c *Client) AuthCodeToOpenid(params Params) (Params, error) {
 // 企业付款到零钱接口
 func (c *Client) Transfer(params Params) (Params, error) {
 	xmlStr, err := c.postWithCert(Transfer, params)
-	fmt.Println(xmlStr)
 	if err != nil {
 		return nil, err
 	}
