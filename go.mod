@@ -1,3 +1,5 @@
-module github.com/objcoding/wxpay
+module github.com/suboat/wxpay
 
-require golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b
+require golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
+
+go 1.13

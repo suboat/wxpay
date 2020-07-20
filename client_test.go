@@ -1,6 +1,8 @@
 package wxpay
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestClient_UnifiedOrder(t *testing.T) {
 	client := NewClient(NewAccount("xxxxx", "xxx", "xxxxx", false))

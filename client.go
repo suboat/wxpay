@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sort"
@@ -51,10 +52,16 @@ func (c *Client) SetAccount(account *Account) {
 
 // 向 params 中添加 appid、mch_id、nonce_str、sign_type、sign
 func (c *Client) fillRequestData(params Params) Params {
-	params["appid"] = c.account.appID
-	params["mch_id"] = c.account.mchID
+	if _, _ok := params["mch_appid"]; !_ok {
+		params["appid"] = c.account.appID
+	}
+	if _, _ok := params["mchid"]; !_ok {
+		params["mch_id"] = c.account.mchID
+	}
 	params["nonce_str"] = nonceStr()
-	params["sign_type"] = c.signType
+	if _, _ok := params["sign_type"]; !_ok {
+		params["sign_type"] = c.signType
+	}
 	params["sign"] = c.Sign(params)
 	return params
 }
@@ -153,7 +160,7 @@ func (c *Client) Sign(params Params) string {
 		dataSha256 []byte
 		str        string
 	)
-
+	fmt.Println(buf.String())
 	switch c.signType {
 	case MD5:
 		dataMd5 = md5.Sum(buf.Bytes())
@@ -381,6 +388,16 @@ func (c *Client) AuthCodeToOpenid(params Params) (Params, error) {
 		url = AuthCodeToOpenidUrl
 	}
 	xmlStr, err := c.postWithoutCert(url, params)
+	if err != nil {
+		return nil, err
+	}
+	return c.processResponseXml(xmlStr)
+}
+
+// 企业付款到零钱接口
+func (c *Client) Transfer(params Params) (Params, error) {
+	xmlStr, err := c.postWithCert(Transfer, params)
+	fmt.Println(xmlStr)
 	if err != nil {
 		return nil, err
 	}
