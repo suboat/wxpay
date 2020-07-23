@@ -51,10 +51,10 @@ func (c *Client) SetAccount(account *Account) {
 
 // 向 params 中添加 appid、mch_id、nonce_str、sign_type、sign
 func (c *Client) fillRequestData(params Params) Params {
-	if _, _ok := params["mch_appid"]; !_ok {
+	if _, _ok := params["appid"]; !_ok {
 		params["appid"] = c.account.appID
 	}
-	if _, _ok := params["mchid"]; !_ok {
+	if _, _ok := params["mch_id"]; !_ok {
 		params["mch_id"] = c.account.mchID
 	}
 	params["nonce_str"] = nonceStr()
