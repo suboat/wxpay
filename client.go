@@ -8,7 +8,6 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sort"
@@ -160,7 +159,6 @@ func (c *Client) Sign(params Params) string {
 		dataSha256 []byte
 		str        string
 	)
-	fmt.Println(buf.String())
 	switch c.signType {
 	case MD5:
 		dataMd5 = md5.Sum(buf.Bytes())
