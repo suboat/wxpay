@@ -6,7 +6,7 @@ import (
 )
 
 type Account struct {
-	appID     string
+	//appID     string
 	mchID     string
 	apiKey    string
 	certData  []byte
@@ -16,7 +16,7 @@ type Account struct {
 // 创建微信支付账号
 func NewAccount(appID string, mchID string, apiKey string, isSanbox bool) *Account {
 	return &Account{
-		appID:     appID,
+		//appID:     appID,
 		mchID:     mchID,
 		apiKey:    apiKey,
 		isSandbox: isSanbox,

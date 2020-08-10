@@ -51,17 +51,11 @@ func (c *Client) SetAccount(account *Account) {
 
 // 向 params 中添加 appid、mch_id、nonce_str、sign_type、sign
 func (c *Client) fillRequestData(params Params) Params {
-	if _, _ok := params["appid"]; !_ok {
-		params["appid"] = c.account.appID
-	}
-	if _, _ok := params["mch_id"]; !_ok {
-		params["mch_id"] = c.account.mchID
-	}
-	params["nonce_str"] = nonceStr()
-	if _, _ok := params["sign_type"]; !_ok {
-		params["sign_type"] = c.signType
-	}
-	params["sign"] = c.Sign(params)
+	//params["appid"] = c.account.appID
+	//params["mch_id"] = c.account.mchID
+	//params["nonce_str"] = nonceStr()
+	//params["sign_type"] = c.signType
+	//params["sign"] = c.Sign(params)
 	return params
 }
 
@@ -128,6 +122,20 @@ func (c *Client) ValidSign(params Params) bool {
 
 // 签名
 func (c *Client) Sign(params Params) string {
+	// 确定加密方式
+	var signType = c.signType
+	if len(signType) == 0 {
+		// 默认加密方式
+		signType = MD5
+	}
+	if v, ok := params["sign_type"]; ok {
+		if len(v) == 0 {
+			params.SetString("sign_type", signType)
+		} else if v != signType {
+			signType = v
+		}
+	}
+
 	// 创建切片
 	var keys = make([]string, 0, len(params))
 	// 遍历签名参数
@@ -159,7 +167,7 @@ func (c *Client) Sign(params Params) string {
 		dataSha256 []byte
 		str        string
 	)
-	switch c.signType {
+	switch signType {
 	case MD5:
 		dataMd5 = md5.Sum(buf.Bytes())
 		str = hex.EncodeToString(dataMd5[:]) //需转换成切片
@@ -195,7 +203,7 @@ func (c *Client) processResponseXml(xmlStr string) (Params, error) {
 	}
 }
 
-// 处理 HTTPS API返回数据，转换成Map对象。return_code为SUCCESS时，验证签名。
+// 处理 HTTPS API返回数据，转换成Map对象。return_code为SUCCESS时，不验证签名。
 func (c *Client) processResponseXmlWithoutSignCheck(xmlStr string) (Params, error) {
 	var returnCode string
 	params := XmlToMap(xmlStr)
@@ -221,6 +229,20 @@ func (c *Client) UnifiedOrder(params Params) (Params, error) {
 	} else {
 		url = UnifiedOrderUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithoutCert(url, params)
 	if err != nil {
 		return nil, err
@@ -236,6 +258,20 @@ func (c *Client) MicroPay(params Params) (Params, error) {
 	} else {
 		url = MicroPayUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithoutCert(url, params)
 	if err != nil {
 		return nil, err
@@ -251,6 +287,20 @@ func (c *Client) Refund(params Params) (Params, error) {
 	} else {
 		url = RefundUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithCert(url, params)
 	if err != nil {
 		return nil, err
@@ -266,6 +316,20 @@ func (c *Client) OrderQuery(params Params) (Params, error) {
 	} else {
 		url = OrderQueryUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithoutCert(url, params)
 	if err != nil {
 		return nil, err
@@ -281,6 +345,20 @@ func (c *Client) RefundQuery(params Params) (Params, error) {
 	} else {
 		url = RefundQueryUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithoutCert(url, params)
 	if err != nil {
 		return nil, err
@@ -296,6 +374,20 @@ func (c *Client) Reverse(params Params) (Params, error) {
 	} else {
 		url = ReverseUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithCert(url, params)
 	if err != nil {
 		return nil, err
@@ -311,6 +403,20 @@ func (c *Client) CloseOrder(params Params) (Params, error) {
 	} else {
 		url = CloseOrderUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithoutCert(url, params)
 	if err != nil {
 		return nil, err
@@ -326,6 +432,20 @@ func (c *Client) DownloadBill(params Params) (Params, error) {
 	} else {
 		url = DownloadBillUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithoutCert(url, params)
 
 	p := make(Params)
@@ -342,6 +462,7 @@ func (c *Client) DownloadBill(params Params) (Params, error) {
 	}
 }
 
+//
 func (c *Client) DownloadFundFlow(params Params) (Params, error) {
 	var url string
 	if c.account.isSandbox {
@@ -349,6 +470,20 @@ func (c *Client) DownloadFundFlow(params Params) (Params, error) {
 	} else {
 		url = DownloadFundFlowUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithCert(url, params)
 
 	p := make(Params)
@@ -373,6 +508,20 @@ func (c *Client) Report(params Params) (Params, error) {
 	} else {
 		url = ReportUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithoutCert(url, params)
 	if err != nil {
 		return nil, err
@@ -388,6 +537,20 @@ func (c *Client) ShortUrl(params Params) (Params, error) {
 	} else {
 		url = ShortUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithoutCert(url, params)
 	if err != nil {
 		return nil, err
@@ -403,6 +566,20 @@ func (c *Client) AuthCodeToOpenid(params Params) (Params, error) {
 	} else {
 		url = AuthCodeToOpenidUrl
 	}
+
+	// sign
+	if _, ok := params["mch_id"]; !ok {
+		params["mch_id"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	if _, ok := params["sign_type"]; !ok {
+		params["sign_type"] = c.signType
+	}
+	params["sign"] = c.Sign(params)
+
+	//
 	xmlStr, err := c.postWithoutCert(url, params)
 	if err != nil {
 		return nil, err
@@ -412,7 +589,27 @@ func (c *Client) AuthCodeToOpenid(params Params) (Params, error) {
 
 // 企业付款到零钱接口
 func (c *Client) Transfer(params Params) (Params, error) {
-	xmlStr, err := c.postWithCert(Transfer, params)
+	var url string
+	if c.account.isSandbox {
+		url = SandboxTransferUrl
+	} else {
+		url = TransferUrl
+	}
+
+	// sign https://pay.weixin.qq.com/wiki/doc/api/tools/mch_pay.php?chapter=14_2
+	if _, ok := params["mchid"]; !ok {
+		params["mchid"] = c.account.mchID
+	}
+	if _, ok := params["nonce_str"]; !ok {
+		params["nonce_str"] = nonceStr()
+	}
+	//if _, ok := params["sign_type"]; !ok {
+	//	params["sign_type"] = c.signType
+	//}
+	params["sign"] = c.Sign(params)
+
+	//
+	xmlStr, err := c.postWithCert(url, params)
 	if err != nil {
 		return nil, err
 	}
