@@ -122,20 +122,16 @@ func (c *Client) ValidSign(params Params) bool {
 
 // 签名
 func (c *Client) Sign(params Params) string {
-	// 确定加密方式
-	var signType = c.signType
-	if len(signType) == 0 {
-		// 默认加密方式
-		signType = MD5
+	switch c.signType {
+	case HMACSHA256:
+		return c.SignBy256(params)
+	default:
+		return c.SignByMD5(params)
 	}
-	if v, ok := params["sign_type"]; ok {
-		if len(v) == 0 {
-			params.SetString("sign_type", signType)
-		} else if v != signType {
-			signType = v
-		}
-	}
+}
 
+// 签名
+func (c *Client) SignByMD5(params Params) string {
 	// 创建切片
 	var keys = make([]string, 0, len(params))
 	// 遍历签名参数
@@ -163,21 +159,52 @@ func (c *Client) Sign(params Params) string {
 	buf.WriteString(c.account.apiKey)
 
 	var (
-		dataMd5    [16]byte
+		dataMd5 [16]byte
+		str     string
+	)
+	dataMd5 = md5.Sum(buf.Bytes())
+	str = hex.EncodeToString(dataMd5[:]) //需转换成切片
+
+	return strings.ToUpper(str)
+}
+
+// 签名
+func (c *Client) SignBy256(params Params) string {
+	// 创建切片
+	var keys = make([]string, 0, len(params))
+	// 遍历签名参数
+	for k := range params {
+		if k != "sign" { // 排除sign字段
+			keys = append(keys, k)
+		}
+	}
+
+	// 由于切片的元素顺序是不固定，所以这里强制给切片元素加个顺序
+	sort.Strings(keys)
+
+	//创建字符缓冲
+	var buf bytes.Buffer
+	for _, k := range keys {
+		if len(params.GetString(k)) > 0 {
+			buf.WriteString(k)
+			buf.WriteString(`=`)
+			buf.WriteString(params.GetString(k))
+			buf.WriteString(`&`)
+		}
+	}
+	// 加入apiKey作加密密钥
+	buf.WriteString(`key=`)
+	buf.WriteString(c.account.apiKey)
+
+	var (
 		dataSha256 []byte
 		str        string
 	)
-	switch signType {
-	case MD5:
-		dataMd5 = md5.Sum(buf.Bytes())
-		str = hex.EncodeToString(dataMd5[:]) //需转换成切片
-	case HMACSHA256:
-		h := hmac.New(sha256.New, []byte(c.account.apiKey))
-		h.Write(buf.Bytes())
-		dataSha256 = h.Sum(nil)
-		str = hex.EncodeToString(dataSha256[:])
-	}
 
+	h := hmac.New(sha256.New, []byte(c.account.apiKey))
+	h.Write(buf.Bytes())
+	dataSha256 = h.Sum(nil)
+	str = hex.EncodeToString(dataSha256[:])
 	return strings.ToUpper(str)
 }
 
@@ -606,7 +633,8 @@ func (c *Client) Transfer(params Params) (Params, error) {
 	//if _, ok := params["sign_type"]; !ok {
 	//	params["sign_type"] = c.signType
 	//}
-	params["sign"] = c.Sign(params)
+	// 写死md5加密
+	params["sign"] = c.SignByMD5(params)
 
 	//
 	xmlStr, err := c.postWithCert(url, params)
